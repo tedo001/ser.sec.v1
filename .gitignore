@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+*.pt
+events/
+*.mp4
+*.avi
+*.log
+.DS_Store

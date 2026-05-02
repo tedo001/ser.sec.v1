@@ -1,0 +1,67 @@
+# AI Surveillance System Configuration
+model:
+  # Try YOLO26 first, fallback to YOLOv8n for speed on edge devices
+  primary: "yolo26.pt"
+  fallback: "yolov8n.pt"
+  # Optional custom-trained weights (mask + weapon classes)
+  custom_weapons: ""   # e.g. "weights/weapons.pt"
+  custom_mask: ""      # e.g. "weights/mask.pt"
+  conf_threshold: 0.35
+  iou_threshold: 0.45
+  device: "cpu"        # "cuda", "mps", or "cpu"
+  imgsz: 640
+
+source:
+  # 0 = default webcam; can also be a path to video file or RTSP URL
+  input: 0
+  # Force "night" mode (overrides time-of-day detection)
+  force_night: false
+
+risk:
+  weights:
+    person: 0.30
+    night: 0.25
+    mask: 0.30
+    weapon: 0.50
+    loitering: 0.20
+  threshold_day: 0.80
+  threshold_night: 0.60
+  loiter_seconds: 8.0
+  # Hours considered "night" (24h, local time)
+  night_start_hour: 19
+  night_end_hour: 6
+
+alert:
+  cooldown_seconds: 15
+  save_dir: "events"
+  beep: true
+  beep_freq_hz: 1200
+  beep_duration_ms: 600
+
+server:
+  host: "0.0.0.0"
+  port: 5000
+  enabled: true
+
+preprocess:
+  # CLAHE-based low-light enhancement
+  night_enhance: true
+  clahe_clip: 2.5
+  clahe_grid: 8
+
+# Class names that count as "weapons/tools"
+weapon_classes:
+  - knife
+  - scissors
+  - baseball bat
+  - crowbar
+  - rod
+  - hammer
+  - gun
+  - pistol
+  - rifle
+
+mask_classes:
+  - mask
+  - face_mask
+  - covered_face
