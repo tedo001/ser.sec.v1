@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+{% block page_title %}Event History{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <span class="toolbar-count">{{ events|length }} event(s)</span>
+  <button class="btn-danger btn-sm"
+          onclick="clearEvents()">Clear All</button>
+</div>
+
+{% if events %}
+<div class="event-grid" id="event-grid">
+  {% for ev in events %}
+  <div class="event-card {% if ev.score >= ev.threshold %}ev-alert{% else %}ev-ok{% endif %}"
+       data-id="{{ loop.index }}">
+
+    {% if ev.thumb %}
+    <a href="/events/image/{{ ev.thumb }}" target="_blank" class="thumb-link">
+      <img class="event-thumb"
+           src="/events/image/{{ ev.thumb }}"
+           alt="event frame"
+           onerror="this.parentElement.style.display='none'" />
+    </a>
+    {% else %}
+    <div class="no-thumb">No image</div>
+    {% endif %}
+
+    <div class="event-meta">
+      <span class="ev-time">{{ ev.iso_time }}</span>
+      <span class="ev-score {% if ev.score >= ev.threshold %}score-red{% else %}score-ok{% endif %}">
+        {{ "%.0f"|format(ev.score * 100) }}%
+      </span>
+    </div>
+
+    <div class="ev-tags">
+      {% if ev.is_night %}<span class="tag tag-night">Night</span>{% endif %}
+      {% for r in ev.reasons %}
+        <span class="tag">{{ r }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="ev-components">
+      {% for k, v in ev.components.items() %}
+      <span class="comp">{{ k }}: +{{ "%.2f"|format(v) }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+  <p>No events recorded yet.</p>
+  <p class="muted">Events are saved automatically when the risk threshold is exceeded.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function clearEvents() {
+  if (!confirm("Delete all events from memory?")) return;
+  await fetch("/api/events", { method: "DELETE" });
+  location.reload();
+}
+</script>
+{% endblock %}

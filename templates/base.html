@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}SurveillanceOS{% endblock %} — Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">⬡</span>
+    <span class="brand-name">SurveillanceOS</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="{{ url_for('dashboard') }}"
+       class="nav-item {% if page == 'dashboard' %}active{% endif %}">
+      <span class="nav-icon">▶</span> Dashboard
+    </a>
+    <a href="{{ url_for('events_page') }}"
+       class="nav-item {% if page == 'events' %}active{% endif %}">
+      <span class="nav-icon">◉</span> Events
+    </a>
+    <a href="{{ url_for('settings_page') }}"
+       class="nav-item {% if page == 'settings' %}active{% endif %}">
+      <span class="nav-icon">⚙</span> Settings
+    </a>
+  </nav>
+
+  <!-- Pipeline controls -->
+  <div class="sidebar-controls">
+    <p class="ctrl-label">Pipeline</p>
+    <div class="ctrl-btns">
+      <button class="btn-ctrl btn-start"  onclick="pipelineAction('start')">Start</button>
+      <button class="btn-ctrl btn-stop"   onclick="pipelineAction('stop')">Stop</button>
+      <button class="btn-ctrl btn-restart" onclick="pipelineAction('restart')">Restart</button>
+    </div>
+    <div class="pipeline-badge" id="pipe-status">
+      <span class="dot dot-off"></span> <span id="pipe-label">Unknown</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <span id="clock"></span>
+  </div>
+</aside>
+
+<!-- ── Main content ─────────────────────────────────────────────────────── -->
+<main class="main-content">
+  <header class="topbar">
+    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+    <div class="topbar-right">
+      <span class="badge-pill" id="risk-badge">—</span>
+      <span class="night-pill" id="night-badge">—</span>
+    </div>
+  </header>
+
+  <div class="content-body">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<script>
+  // ── Clock ────────────────────────────────────────────────────────────
+  function tickClock() {
+    document.getElementById("clock").textContent =
+      new Date().toLocaleTimeString();
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  // ── Pipeline API helpers ─────────────────────────────────────────────
+  async function pipelineAction(action) {
+    await fetch(`/api/pipeline/${action}`, { method: "POST" });
+  }
+
+  // ── SSE status ticker ────────────────────────────────────────────────
+  const evSrc = new EventSource("/stream/status");
+  evSrc.onmessage = (e) => {
+    const s = JSON.parse(e.data);
+    updateTopBar(s);
+    if (typeof onStatusUpdate === "function") onStatusUpdate(s);
+  };
+
+  function updateTopBar(s) {
+    const dot   = document.querySelector(".dot");
+    const lbl   = document.getElementById("pipe-label");
+    const risk  = document.getElementById("risk-badge");
+    const night = document.getElementById("night-badge");
+
+    dot.className  = s.running ? "dot dot-on" : "dot dot-off";
+    lbl.textContent = s.running ? "Running" : "Stopped";
+
+    const score = s.risk.score;
+    const thr   = s.risk.threshold;
+    risk.textContent = `Risk ${(score * 100).toFixed(0)}%`;
+    risk.className   = `badge-pill ${s.risk.triggered ? "pill-alert" : score > thr * 0.7 ? "pill-warn" : "pill-ok"}`;
+
+    night.textContent = s.risk.is_night ? "🌙 Night" : "☀ Day";
+    night.className   = `night-pill ${s.risk.is_night ? "night-on" : "night-off"}`;
+  }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

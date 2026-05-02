@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Live Dashboard{% endblock %}
+
+{% block content %}
+<!-- ── Stat cards ─────────────────────────────────────────────────────── -->
+<div class="stat-row">
+  <div class="stat-card">
+    <p class="stat-label">FPS</p>
+    <p class="stat-value" id="s-fps">—</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Active Tracks</p>
+    <p class="stat-value" id="s-tracks">—</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Loitering</p>
+    <p class="stat-value" id="s-loiters">—</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Total Detections</p>
+    <p class="stat-value" id="s-dets">—</p>
+  </div>
+</div>
+
+<!-- ── Video + risk gauge row ────────────────────────────────────────── -->
+<div class="monitor-row">
+
+  <!-- Live feed -->
+  <div class="video-card">
+    <div class="card-head">
+      <span class="card-title">Live Feed</span>
+      <span class="live-dot" id="live-dot">● LIVE</span>
+    </div>
+    <div class="video-wrap">
+      <img id="feed-img" src="/stream/video" alt="Live feed"
+           onerror="this.src='/stream/video'" />
+    </div>
+  </div>
+
+  <!-- Risk gauge + breakdown -->
+  <div class="gauge-card">
+    <div class="card-head"><span class="card-title">Risk Score</span></div>
+
+    <div class="gauge-wrap">
+      <canvas id="gauge-canvas" width="220" height="140"></canvas>
+      <div class="gauge-label">
+        <span id="g-score">0</span>%
+      </div>
+      <div class="gauge-sublabel" id="g-threshold">Threshold —</div>
+    </div>
+
+    <div class="reason-list" id="reason-list">
+      <p class="reason-empty">No signals</p>
+    </div>
+
+    <div class="component-grid" id="component-grid"></div>
+  </div>
+
+</div>
+
+<!-- ── Recent alerts strip ────────────────────────────────────────────── -->
+<div class="section-head">
+  <span>Recent Alerts</span>
+  <button class="btn-sm" onclick="loadRecent()">↺ Refresh</button>
+</div>
+<div class="recent-strip" id="recent-strip">
+  <p class="empty-msg">No alerts yet.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
